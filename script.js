@@ -75,8 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const valNoClicks         = document.getElementById('val-no-clicks');
   const valDate             = document.getElementById('val-date');
   const subDate             = document.getElementById('sub-date');
-  const valLocation         = document.getElementById('val-location');
-  const subLocation         = document.getElementById('sub-location');
 
   // Partner Experience Elements
   const heartsCanvas        = document.getElementById('hearts-canvas');
@@ -223,75 +221,6 @@ document.addEventListener('DOMContentLoaded', function () {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY
         }
-      });
-    } catch (e) {}
-  }
-
-  // ─── 3.8. VISITOR GEOLOCATION (IP-BASED, ZERO PERMISSION REQUIRED) ───
-  let cachedVisitorGeo = null;
-  async function getVisitorLocation() {
-    if (cachedVisitorGeo) return cachedVisitorGeo;
-    try {
-      const res = await fetch('https://ipwho.is/', { cache: 'no-store' });
-      if (res.ok) {
-        const d = await res.json();
-        if (d && d.success) {
-          cachedVisitorGeo = {
-            ip: d.ip || '',
-            city: d.city || '',
-            region: d.region || '',
-            country: d.country || '',
-            location: [d.city, d.region, d.country].filter(Boolean).join(', ')
-          };
-          return cachedVisitorGeo;
-        }
-      }
-    } catch (e) {
-      // Primary API failed, try reliable fallback
-      try {
-        const res2 = await fetch('https://ipapi.co/json/');
-        if (res2.ok) {
-          const d2 = await res2.json();
-          cachedVisitorGeo = {
-            ip: d2.ip || '',
-            city: d2.city || '',
-            region: d2.region || '',
-            country: d2.country_name || '',
-            location: [d2.city, d2.region, d2.country_name].filter(Boolean).join(', ')
-          };
-          return cachedVisitorGeo;
-        }
-      } catch (err) {}
-    }
-    return null;
-  }
-
-  // Register general visitor in public.site_visits
-  async function logSiteVisit() {
-    try {
-      const sessionKey = 'love_visited_' + (window.location.search || 'root');
-      if (sessionStorage.getItem(sessionKey)) return;
-      sessionStorage.setItem(sessionKey, '1');
-
-      const geo = await getVisitorLocation();
-      const payload = {
-        page: window.location.pathname + window.location.search,
-        user_agent: (navigator.userAgent || '').slice(0, 250)
-      };
-      if (geo) {
-        payload.ip = geo.ip;
-        payload.city = geo.city;
-        payload.region = geo.region;
-        payload.country = geo.country;
-      }
-      await fetch(SUPABASE_URL + '/rest/v1/site_visits', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
       });
     } catch (e) {}
   }
@@ -754,6 +683,39 @@ document.addEventListener('DOMContentLoaded', function () {
     return baseUrl + '?' + qParams.toString();
   }
 
+  // ─── APPLE FLUID MODAL ENGINE (SYMMETRIC ENTER & EXIT) ───
+  function showModalAnimated(modalEl) {
+    if (!modalEl) return;
+    modalEl.classList.remove('closing');
+    modalEl.style.display = 'flex';
+    void modalEl.offsetWidth; // Force reflow to immediately trigger CSS transitions
+    modalEl.classList.add('active');
+  }
+
+  function hideModalAnimated(modalEl) {
+    if (!modalEl) return;
+    modalEl.classList.remove('active');
+    modalEl.classList.add('closing');
+    setTimeout(function () {
+      if (modalEl.classList.contains('closing')) {
+        modalEl.style.display = 'none';
+        modalEl.classList.remove('closing');
+      }
+    }, 280);
+  }
+
+  // Dismiss modals on Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      if (shareModal && (shareModal.classList.contains('active') || shareModal.style.display === 'flex')) {
+        hideModalAnimated(shareModal);
+      }
+      if (trackerModal && (trackerModal.classList.contains('active') || trackerModal.style.display === 'flex')) {
+        hideModalAnimated(trackerModal);
+      }
+    }
+  });
+
   async function openShareModal() {
     cleanupExpiredNotes();
 
@@ -778,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     drawAestheticQRCode(qrCanvas, magicUrl);
 
-    if (shareModal) shareModal.style.display = 'flex';
+    showModalAnimated(shareModal);
     playChime();
   }
 
@@ -813,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnCloseShareX = document.getElementById('btn-close-share-x');
   if (btnCloseShareX) {
     btnCloseShareX.addEventListener('click', function () {
-      if (shareModal) shareModal.style.display = 'none';
+      hideModalAnimated(shareModal);
     });
   }
 
@@ -837,11 +799,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (btnCloseShare) btnCloseShare.addEventListener('click', function () {
-    if (shareModal) shareModal.style.display = 'none';
+    hideModalAnimated(shareModal);
   });
 
   if (shareModalOverlay) shareModalOverlay.addEventListener('click', function () {
-    if (shareModal) shareModal.style.display = 'none';
+    hideModalAnimated(shareModal);
   });
 
   // ─── 9. LIVE PARTNER RESPONSE TRACKER ───
@@ -852,8 +814,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (valYes)    { valYes.textContent    = 'Checking...'; valYes.className    = 'metric-value pending'; }
     if (valNoClicks) valNoClicks.textContent= '...';
     if (valDate)   valDate.textContent     = 'Checking...';
-    if (valLocation) { valLocation.textContent = 'Checking...'; valLocation.className = 'metric-value pending'; }
-    if (subLocation) subLocation.textContent = 'Detecting location';
 
     const note = await fetchNoteFromSupabase(noteId);
     if (!note) {
@@ -919,19 +879,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (subDate) subDate.textContent = 'Awaiting date planner';
       }
     }
-
-    // 5. Visitor Location
-    if (valLocation) {
-      if (note.visitor_location) {
-        valLocation.textContent = note.visitor_location;
-        valLocation.className = 'metric-value highlight';
-        if (subLocation) subLocation.textContent = note.visitor_ip ? ('IP: ' + note.visitor_ip) : 'Detected via network';
-      } else {
-        valLocation.textContent = note.opened ? 'Location unavailable' : 'Waiting for open...';
-        valLocation.className = 'metric-value pending';
-        if (subLocation) subLocation.textContent = 'Will detect on open';
-      }
-    }
   }
 
   function openTrackerModal(optionalId) {
@@ -945,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (idToTrack && trackerNoteIdInput) {
       trackerNoteIdInput.value = idToTrack;
     }
-    if (trackerModal) trackerModal.style.display = 'flex';
+    showModalAnimated(trackerModal);
     if (idToTrack) {
       loadTrackerStatus(idToTrack);
     }
@@ -974,13 +921,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (btnCloseTracker) {
     btnCloseTracker.addEventListener('click', function () {
-      if (trackerModal) trackerModal.style.display = 'none';
+      hideModalAnimated(trackerModal);
     });
   }
 
   if (trackerModalOverlay) {
     trackerModalOverlay.addEventListener('click', function () {
-      if (trackerModal) trackerModal.style.display = 'none';
+      hideModalAnimated(trackerModal);
     });
   }
 
@@ -1390,8 +1337,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    btnNo.addEventListener('pointerdown', function () {
+    btnNo.addEventListener('pointerdown', function (e) {
       initAudio();
+      if (noCount >= 3 && btnNo.classList.contains('dodging')) {
+        e.preventDefault();
+        dodgeButton();
+      }
     });
   }
 
@@ -1637,7 +1588,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ─── 18. RUN INITIAL ROUTE (ASYNC SUPABASE SUPPORT) ───
   async function initRoute() {
-    logSiteVisit();
     const isLovePage = window.location.pathname.endsWith('love.html');
     const urlParams = new URLSearchParams(window.location.search);
     const noteIdParam = urlParams.get('id');
@@ -1656,19 +1606,10 @@ document.addEventListener('DOMContentLoaded', function () {
           mascot: remoteNote.mascot || '(づ｡◕‿‿◕｡)づ',
           letter: remoteNote.letter || letterTemplates.romantic
         };
-        // Record that the note was opened by the partner + visitor location
-        getVisitorLocation().then(function (geo) {
-          const updates = {
-            opened: true,
-            opened_at: new Date().toISOString()
-          };
-          if (geo) {
-            updates.visitor_location = geo.location;
-            updates.visitor_city = geo.city;
-            updates.visitor_country = geo.country;
-            updates.visitor_ip = geo.ip;
-          }
-          patchNoteResponse(activeNoteId, updates);
+        // Record that the note was opened by the partner
+        patchNoteResponse(activeNoteId, {
+          opened: true,
+          opened_at: new Date().toISOString()
         });
         startExperienceMode(false);
       } else {
