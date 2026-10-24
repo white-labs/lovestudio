@@ -429,6 +429,45 @@ document.addEventListener('DOMContentLoaded', function () {
   if (studioQuestion) studioQuestion.addEventListener('input', updatePhoneMockup);
   if (studioLetter) studioLetter.addEventListener('input', updatePhoneMockup);
 
+  // ─── INTERACTIVE PHONE MOCKUP PREVIEW CONTROLS ───
+  const mockupBtnYes = document.getElementById('mockup-btn-yes');
+  const mockupBtnNo = document.getElementById('mockup-btn-no');
+  const mockupBadgeInteractive = document.getElementById('mockup-badge-interactive');
+
+  if (mockupBadgeInteractive) {
+    mockupBadgeInteractive.addEventListener('click', function () {
+      if (btnPreviewFullscreen) btnPreviewFullscreen.click();
+    });
+  }
+
+  if (mockupBtnYes) {
+    mockupBtnYes.addEventListener('click', function () {
+      playSuccess();
+      mockupBtnYes.style.transform = 'scale(1.1)';
+      setTimeout(function () {
+        mockupBtnYes.style.transform = '';
+        if (btnPreviewFullscreen) btnPreviewFullscreen.click();
+      }, 300);
+    });
+  }
+
+  if (mockupBtnNo) {
+    let mockupDodgeCount = 0;
+    function dodgeMockupNo(e) {
+      if (e) e.preventDefault();
+      mockupDodgeCount++;
+      const moveX = (mockupDodgeCount % 2 === 0 ? 1 : -1) * 22;
+      const moveY = (mockupDodgeCount % 3 === 0 ? 1 : -1) * 14;
+      mockupBtnNo.style.transform = 'translate(' + moveX + 'px, ' + moveY + 'px) scale(0.95)';
+      playPop();
+      setTimeout(function () {
+        mockupBtnNo.style.transform = '';
+      }, 700);
+    }
+    mockupBtnNo.addEventListener('mouseenter', dodgeMockupNo);
+    mockupBtnNo.addEventListener('pointerdown', dodgeMockupNo);
+  }
+
   if (questionPresets) {
     questionPresets.querySelectorAll('.preset-chip').forEach(function (btn) {
       btn.addEventListener('click', function () {

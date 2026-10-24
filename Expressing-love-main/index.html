@@ -282,18 +282,46 @@
                             </div>
                             <div class="phone-glare"></div>
                             <div class="phone-screen">
+                                <div class="phone-status-bar">
+                                    <span class="status-time">9:41</span>
+                                    <div class="phone-status-icons">
+                                        <svg width="15" height="11" viewBox="0 0 16 12" fill="currentColor">
+                                            <rect x="0" y="8" width="2.5" height="4" rx="0.6"/>
+                                            <rect x="4.5" y="5.5" width="2.5" height="6.5" rx="0.6"/>
+                                            <rect x="9" y="3" width="2.5" height="9" rx="0.6"/>
+                                            <rect x="13.5" y="0" width="2.5" height="12" rx="0.6"/>
+                                        </svg>
+                                        <svg width="14" height="11" viewBox="0 0 16 12" fill="currentColor">
+                                            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4.2-2.8a5.9 5.9 0 0 1 8.4 0 .8.8 0 0 1-1.1 1.1 4.3 4.3 0 0 0-6.2 0 .8.8 0 0 1-1.1-1.1zm-2.8-2.8a9.9 9.9 0 0 1 14 0 .8.8 0 0 1-1.1 1.1 8.3 8.3 0 0 0-11.8 0 .8.8 0 0 1-1.1-1.1z"/>
+                                        </svg>
+                                        <div class="phone-battery">
+                                            <div class="phone-battery-level"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="phone-screen-aura" aria-hidden="true">
+                                    <div class="screen-aura-orb orb-1"></div>
+                                    <div class="screen-aura-orb orb-2"></div>
+                                </div>
+                                <div class="phone-floating-hearts" aria-hidden="true">
+                                    <span class="preview-heart ph-1">💖</span>
+                                    <span class="preview-heart ph-2">💕</span>
+                                    <span class="preview-heart ph-3">✨</span>
+                                    <span class="preview-heart ph-4">🌸</span>
+                                </div>
                                 <div class="mockup-content">
                                     <div class="mockup-card">
                                         <div id="mockup-mascot" class="mockup-mascot">(づ｡◕‿‿◕｡)づ</div>
                                         <h3 id="mockup-question" class="mockup-question">Do you love me? 🥺</h3>
                                         <p id="mockup-subtitle" class="mockup-subtitle">~ Someone special is waiting for your answer</p>
                                         <div class="mockup-buttons">
-                                            <div class="mockup-btn yes">Yes 💖</div>
-                                            <div class="mockup-btn no">No 😤</div>
+                                            <div class="mockup-btn yes" id="mockup-btn-yes">Yes 💖</div>
+                                            <div class="mockup-btn no" id="mockup-btn-no">No 😤</div>
                                         </div>
-                                        <div class="mockup-preview-badge">✨ Tap "Test Interactive Flow" to try live</div>
+                                        <div class="mockup-preview-badge" id="mockup-badge-interactive">✨ Tap "Test Interactive Flow" to try live</div>
                                     </div>
                                 </div>
+                                <div class="phone-home-indicator"></div>
                             </div>
                         </div>
                     </div>
